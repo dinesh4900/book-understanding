@@ -4,7 +4,7 @@ import os
 import weaviate
 import weaviate.classes as wvc
 import ollama
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from . import config
 
 class VectorStore:
@@ -106,6 +106,32 @@ class VectorStore:
         
         print("✅ Data ingestion complete!")
 
+    def query(self, query_text: str, top_k: int = 1) -> list[dict]:
+        """
+        Queries the vector store for the most relevant chunks for a given text.
+        Returns a list of chunk objects, each containing 'content' and 'source'.
+        """
+        print(f"\n🔎 Searching for context relevant to: '{query_text}'...")
+        
+        # We need the embedding model again to convert the query text to a vector
+        embeddings = OllamaEmbeddings(model=config.OLLAMA_EMBEDDING_MODEL)
+        query_vector = embeddings.embed_query(query_text)
+        
+        # Get the collection object
+        collection = self.client.collections.get(config.COLLECTION_NAME)
+        
+        # Perform the vector search
+        response = collection.query.near_vector(
+            near_vector=query_vector,
+            limit=config.TOP_K,
+            # Crucially, we ask it to return the properties we stored
+            return_properties=["content", "source"] 
+        )
+        
+        retrieved_chunks = [item.properties for item in response.objects]
+            
+        print(f"✅ Found {len(retrieved_chunks)} relevant chunks.")
+        return retrieved_chunks
 
     def close(self):
         """Closes the Weaviate client connection if it exists."""
