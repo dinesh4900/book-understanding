@@ -6,6 +6,7 @@ load_dotenv()
 import ollama
 from src.vector_store import VectorStore
 from src.prompt_manager import create_prompt
+from src.response_formatter import ResponseFormatter
 from src import config
 
 def main():
@@ -25,7 +26,8 @@ def main():
             # 2. Retrieve relevant context from the vector store
             context_chunks = store.query(user_query, config.TOP_K)
 
-            print(f"\nChunks: {context_chunks}")
+            # Display context preview for debugging
+            print(f"\nContext Preview:\n{ResponseFormatter.format_context_preview(context_chunks)}")
 
             # 3. Create a detailed prompt for the LLM
             prompt = create_prompt(user_query, context_chunks)
@@ -38,12 +40,10 @@ def main():
             )
             
             answer = response['message']['content']
-            print(answer)
             
-            # Extract and display the sources for verification
-            sources = ", ".join(sorted(list(set(chunk['source'] for chunk in context_chunks))))
-            if sources:
-                print(f"\nSources: {sources}")
+            # 5. Format and display the response with sources
+            formatted_response = ResponseFormatter.format_response_with_sources(answer, context_chunks)
+            print(formatted_response)
 
     except Exception as e:
         print(f"\n❌ An error occurred: {e}")
