@@ -6,28 +6,44 @@ load_dotenv()
 import ollama
 from src.vector_store import VectorStore
 from src.prompt_manager import create_prompt
-from src.response_formatter import ResponseFormatter
+from src.greeting_handler import is_greeting, is_simple_greeting, get_greeting_response
 from src import config
 
 def main():
-    """The main function to run the interactive RAG chat session without saving history."""
-    print("--- RAG Chatbot Initializing (No Database) ---")
+    """The main function to run the interactive RAG chat session with greeting support."""
+    print("--- Interactive Book Chat Assistant ---")
+    print("🤖 Hello! I'm your book assistant. I can greet you and answer questions about the book!")
+    
     store = None
     try:
         store = VectorStore()
         
-        print("\n✅ Chatbot is ready! Ask a question about your book. Type 'exit' to quit.")
+        print("\n✅ Chatbot is ready! Say hello or ask a question about your book. Type 'exit' to quit.")
+        print("💡 Try: 'Hello', 'Good morning', 'What is this book about?', etc.")
+        
         while True:
             # 1. Get user input
             user_query = input("\nYou: ")
             if user_query.lower() == 'exit':
+                print("👋 Goodbye! Thanks for exploring the book with me!")
                 break
 
-            # 2. Retrieve relevant context from the vector store
+            # 2. Check if it's a simple greeting first
+            if is_simple_greeting(user_query):
+                greeting_response = get_greeting_response(user_query)
+                print(f"\n🤖 Assistant: {greeting_response}")
+                continue
+            
+            # 3. If message contains greeting but has more content
+            if is_greeting(user_query):
+                greeting_response = get_greeting_response(user_query)
+                print(f"\n🤖 Assistant: {greeting_response}")
+                print("Now let me search the book for your question...")
+
+            # 4. Retrieve relevant context from the vector store
             context_chunks = store.query(user_query, config.TOP_K)
 
-            # Display context preview for debugging
-            print(f"\nContext Preview:\n{ResponseFormatter.format_context_preview(context_chunks)}")
+            print(f"\nChunks: {context_chunks}")
 
             # 3. Create a detailed prompt for the LLM
             prompt = create_prompt(user_query, context_chunks)
@@ -40,10 +56,12 @@ def main():
             )
             
             answer = response['message']['content']
+            print(answer)
             
-            # 5. Format and display the response with sources
-            formatted_response = ResponseFormatter.format_response_with_sources(answer, context_chunks)
-            print(formatted_response)
+            # Extract and display the sources for verification
+            sources = ", ".join(sorted(list(set(chunk['source'] for chunk in context_chunks))))
+            if sources:
+                print(f"\nSources: {sources}")
 
     except Exception as e:
         print(f"\n❌ An error occurred: {e}")
