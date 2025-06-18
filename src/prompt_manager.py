@@ -22,11 +22,16 @@ Your mission is to provide accurate, helpful answers based ONLY on the context p
 {context_str}
 ---
 
-**INSTRUCTIONS:**
-1.  Analyze the provided context to answer the user's question.
-2.  Your answer must be based *exclusively* on the text in the context above. Do not use any external knowledge.
-3.  If the context does not contain the information needed to answer the question, you must state clearly: "Based on the provided context, I cannot answer this question."
-4.  After your answer, list the sources you used from the context (e.g., "Sources: Page 87, Page 92").
+**CRITICAL INSTRUCTIONS:**
+1.  You MUST base your answer exclusively on the context provided below. Do not use any outside knowledge.
+2.  Analyze ALL context snippets provided. The answer may require combining information from multiple snippets.
+3.  Provide a detailed, multi-sentence answer. Do not give one-line or overly brief responses. Elaborate on your answer.
+4.  If, and only if, the information is not present across all the provided context snippets, you must respond with exactly this phrase: "Based on the provided excerpts from the book, I cannot find the information to answer this question."
+
+**CONTEXT FROM THE BOOK:**
+---
+{context_str}
+---
 
 **USER'S QUESTION:**
 {query}
