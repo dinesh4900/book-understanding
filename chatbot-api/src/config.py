@@ -18,4 +18,7 @@ OLLAMA_LLM = "llama3.2:latest"
 # --- DATA PROCESSING ---
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 150
-TOP_K = 5
+
+# --- CONTEXT RETRIEVAL SETTINGS ---
+# Number of relevant chunks to retrieve from the book for answering questions
+TOP_K = 7  # At least 7 contexts as requested
